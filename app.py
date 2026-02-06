@@ -1,13 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify
 import psutil
 from ml import predict_result
-import pytesseract
 import os
 import easyocr
 import cv2
 import yfinance as yf
 from datetime import datetime
-import pandas as pd
 from nsepython import nse_get_index_quote, nse_quote
 from deepface import DeepFace
 from functools import wraps
@@ -229,7 +227,7 @@ def dashboard():
         stocks=stocks
     )
 
-pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
+# EasyOCR is used instead of pytesseract
 
 @app.route("/upload", methods=["GET", "POST"])
 @login_required

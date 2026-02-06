@@ -1,6 +1,6 @@
 
 import yfinance as yf
-import pandas as pd
+
 
 def check_intervals():
     tickers = ["^BSESN", "TRIDENT.NS"]
