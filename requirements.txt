@@ -1,0 +1,32 @@
+# Web Frameworks
+Flask==3.0.0
+fastapi==0.128.2
+uvicorn==0.40.0
+flask-cors==6.0.2
+
+# Data Validation
+pydantic==2.12.5
+pydantic_core==2.41.5
+
+# Database
+mysql-connector-python==9.5.0
+
+# Data Processing
+pandas==3.0.0
+
+# Stock Market Data
+yfinance==1.1.0
+nsepython==2.97
+
+# AI/ML Libraries
+deepface==0.0.98
+opencv-python==4.13.0.90
+opencv-python-headless==4.13.0.90
+scikit-learn==1.8.0
+
+# OCR
+easyocr==1.7.2
+pytesseract==0.3.13
+
+# System Utilities
+psutil==7.2.2
