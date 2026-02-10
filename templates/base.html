@@ -7,10 +7,53 @@
     <title>{% block title %}My Learning App{% endblock %}</title>
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    {% block head %}{% endblock %}
+    <!-- HTMX for smooth transitions -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"
+        integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+        crossorigin="anonymous"></script>
+    <style>
+        .nav-item.active {
+            color: var(--primary-color);
+            position: relative;
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        /* Smooth fade for content */
+        .fade-content {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 
-<body>
+<body hx-boost="true">
+
+    <!-- Page Loader -->
+    <div class="loader-overlay" id="pageLoader">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
 
     <!-- Navigation -->
     <nav class="navbar">
@@ -22,7 +65,8 @@
             <a href="{{ url_for('dashboard') }}" class="nav-item">Dashboard</a>
             <a href="{{ url_for('gallery') }}" class="nav-item">Gallery</a>
             <a href="{{ url_for('users') }}" class="nav-item">Users</a>
-            <a href="{{ url_for('logout') }}" class="nav-item" style="color: var(--secondary-color)">Logout</a>
+            <a href="{{ url_for('logout') }}" class="nav-item" hx-boost="false"
+                style="color: var(--secondary-color)">Logout</a>
             {% else %}
             <a href="{{ url_for('login') }}" class="nav-item">Login</a>
             {% endif %}
@@ -30,10 +74,56 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container">
+    <div class="container fade-content" id="mainContent">
         {% block content %}{% endblock %}
     </div>
 
+    <script>
+        // Handle Active Link Highlighting
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-item');
+
+            navLinks.forEach(link => {
+                const linkPath = link.getAttribute('href');
+                if (currentPath === linkPath || (currentPath.startsWith(linkPath) && linkPath !== '/')) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Handle Loader with HTMX events
+        document.body.addEventListener('htmx:configRequest', function () {
+            document.getElementById('pageLoader').classList.add('active');
+        });
+
+        document.body.addEventListener('htmx:afterOnLoad', function () {
+            document.getElementById('pageLoader').classList.remove('active');
+
+            // Re-run active link logic for new content
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-item');
+            navLinks.forEach(link => {
+                link.classList.remove('active'); // Clear generic active
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Fallback for standard loads (initial or non-HTMX)
+        window.addEventListener('load', function () {
+            document.getElementById('pageLoader').classList.remove('active');
+        });
+
+        // Show loader on standard beforeunload (for non-HTMX links or full reloads)
+        window.addEventListener('beforeunload', function () {
+            // Only show if not HTMX request (HTMX handles its own)
+            if (!document.querySelector('.htmx-request')) {
+                document.getElementById('pageLoader').classList.add('active');
+            }
+        });
+    </script>
 </body>
 
 </html>

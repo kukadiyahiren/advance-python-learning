@@ -11,7 +11,7 @@
         <div style="background: rgba(255, 255, 255, 0.03); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
             <h3 id="formTitle" style="margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--primary-color);">Create New
                 User</h3>
-            <form id="userForm" onsubmit="handleUserSubmit(event)">
+            <form id="userForm" method="POST">
                 <input type="hidden" id="userId" name="userId">
                 <div
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
@@ -115,221 +115,251 @@
 </div>
 
 <script>
-    const API_BASE_URL = 'http://127.0.0.1:8000/api/users';
-    let usersData = []; // Store users locally
-    let currentPage = 1;
-    let pageSize = 10;
-    let totalPages = 1;
+    (function () {
+        // Use a local scope to avoid "Identifier already declared" errors with HTMX
+        const API_BASE_URL = 'http://127.0.0.1:8000/api/users';
+        let usersData = [];
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
 
-    // Load users on page load
-    document.addEventListener('DOMContentLoaded', () => loadUsers(currentPage));
-
-    function showMessage(message, isSuccess = true) {
-        const messageBox = document.getElementById('messageBox');
-        messageBox.textContent = message;
-        messageBox.style.display = 'block';
-        messageBox.style.borderLeft = `4px solid ${isSuccess ? '#10b981' : '#ef4444'}`;
-        messageBox.style.background = isSuccess ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-        messageBox.style.color = isSuccess ? '#10b981' : '#ef4444';
-
-        setTimeout(() => {
-            messageBox.style.display = 'none';
-        }, 5000);
-    }
-
-    async function loadUsers(page = 1) {
-        try {
-            const response = await fetch(`${API_BASE_URL}?page=${page}&size=${pageSize}`);
-            const data = await response.json();
-
-            // Handle both structure (array for old API, object for new paginated API)
-            // But we know it's paginated now
-            const users = data.items || [];
-            const total = data.total || 0;
-            currentPage = data.page || page;
-            totalPages = data.pages || 1;
-
-            usersData = users; // Store for edit
-
-            const tbody = document.getElementById('usersTableBody');
-            const emptyState = document.getElementById('emptyState');
-            const tableContainer = document.getElementById('usersTableContainer');
-            const userCount = document.getElementById('userCount');
-            const paginationControls = document.getElementById('paginationControls');
-
-            userCount.textContent = `(${total})`;
-
-            // Update Pagination UI
-            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
-            document.getElementById('prevBtn').disabled = currentPage <= 1;
-            document.getElementById('prevBtn').style.opacity = currentPage <= 1 ? '0.5' : '1';
-            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
-            document.getElementById('nextBtn').style.opacity = currentPage >= totalPages ? '0.5' : '1';
-
-            if (users.length === 0 && currentPage === 1) {
-                tableContainer.style.display = 'none';
-                paginationControls.style.display = 'none';
-                emptyState.style.display = 'block';
-            } else {
-                tableContainer.style.display = 'block';
-                paginationControls.style.display = 'flex';
-                emptyState.style.display = 'none';
-
-                tbody.innerHTML = users.map(user => `
-                    <tr id="user-${user.id}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s;">
-                        <td style="padding: 1rem;">${user.id}</td>
-                        <td style="padding: 1rem; font-weight: 500;">${user.name}</td>
-                        <td style="padding: 1rem; color: var(--text-muted);">${user.email}</td>
-                        <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">${new Date(user.created_at).toLocaleString()}</td>
-                        <td style="padding: 1rem; text-align: center;">
-                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <button onclick="editUser(${user.id})"
-                                    style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.9); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;">
-                                    ✏️ Edit
-                                </button>
-                                <button onclick="deleteUser(${user.id})"
-                                    style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.5rem 1rem; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;">
-                                    🗑️ Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
+        // Attach functions to window for HTML event handlers
+        window.showMessage = function (message, isSuccess = true) {
+            let toast = document.getElementById('toast-notification');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast-notification';
+                document.body.appendChild(toast);
             }
-        } catch (error) {
-            console.error('Error loading users:', error);
-            showMessage('Error loading users. Make sure FastAPI server is running.', false);
-        }
-    }
 
-    function changePage(delta) {
-        const newPage = currentPage + delta;
-        if (newPage >= 1 && newPage <= totalPages) {
-            loadUsers(newPage);
-        }
-    }
+            toast.textContent = message;
+            toast.className = `toast-notification ${isSuccess ? 'success' : 'error'} show`;
 
-    async function handleUserSubmit(event) {
-        event.preventDefault();
+            // Clear previous timeout if exists
+            if (toast.timeoutId) clearTimeout(toast.timeoutId);
 
-        const formData = new FormData(event.target);
-        const userId = formData.get('userId');
-        const isEdit = !!userId;
-
-        const userData = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            password: formData.get('password')
+            toast.timeoutId = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
         };
 
-        // For edit, if password is empty, don't send it or handle in backend
-        // This simple backend might require password, let's check.
-        // If password field is empty during edit and we want to keep it, 
-        // we might need to fetch the existing user's password which is not safe/ideal, 
-        // or backend should handle partial updates.
-        // Assuming backend requires password for now or we must provide one.
-        // If the user didn't type a password in edit mode, checking if we can skip it.
-        // Looking at FastAPI UserUpdate model: password: str is required.
-        // So user MUST provide password to update for now.
+        window.loadUsers = async function (page = 1) {
+            try {
+                const userCount = document.getElementById('userCount');
+                // If elements are missing, the page might have changed
+                if (!userCount) return;
 
-        if (isEdit && !userData.password) {
-            // If we really want to support "leave blank to keep", 
-            // we'd need to change backend UserUpdate to have optional password
-            // OR fetch current user data and send it back.
-            // For now, let's just make it required or alert
-            alert("Please enter a password to update user (required by API)");
-            return;
-        }
+                const response = await fetch(`${API_BASE_URL}?page=${page}&size=${pageSize}`);
+                const data = await response.json();
 
-        const url = isEdit ? `${API_BASE_URL}/${userId}` : API_BASE_URL;
-        const method = isEdit ? 'PUT' : 'POST';
+                const users = data.items || [];
+                const total = data.total || 0;
+                currentPage = data.page || page;
+                totalPages = data.pages || 1;
 
-        try {
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(userData)
-            });
+                usersData = users; // Store for edit
 
-            const data = await response.json();
+                const tbody = document.getElementById('usersTableBody');
+                const emptyState = document.getElementById('emptyState');
+                const tableContainer = document.getElementById('usersTableContainer');
+                const paginationControls = document.getElementById('paginationControls');
 
-            if (response.ok) {
-                showMessage(`✅ User ${isEdit ? 'updated' : 'created'} successfully!`, true);
-                resetForm();
-                loadUsers(currentPage);
-            } else {
-                showMessage(`❌ ${data.detail || 'Error processing request'}`, false);
+                if (userCount) userCount.textContent = `(${total})`;
+
+                // Update Pagination UI
+                const pageInfo = document.getElementById('pageInfo');
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+
+                if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+                if (prevBtn) {
+                    prevBtn.disabled = currentPage <= 1;
+                    prevBtn.style.opacity = currentPage <= 1 ? '0.5' : '1';
+                }
+                if (nextBtn) {
+                    nextBtn.disabled = currentPage >= totalPages;
+                    nextBtn.style.opacity = currentPage >= totalPages ? '0.5' : '1';
+                }
+
+                if (users.length === 0 && currentPage === 1) {
+                    if (tableContainer) tableContainer.style.display = 'none';
+                    if (paginationControls) paginationControls.style.display = 'none';
+                    if (emptyState) emptyState.style.display = 'block';
+                    if (tbody) tbody.innerHTML = '';
+                } else {
+                    if (tableContainer) tableContainer.style.display = 'block';
+                    if (paginationControls) paginationControls.style.display = 'flex';
+                    if (emptyState) emptyState.style.display = 'none';
+
+                    if (tbody) {
+                        tbody.innerHTML = users.map(user => `
+                            <tr id="user-${user.id}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s;">
+                                <td style="padding: 1rem;">${user.id}</td>
+                                <td style="padding: 1rem; font-weight: 500;">${user.name}</td>
+                                <td style="padding: 1rem; color: var(--text-muted);">${user.email}</td>
+                                <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">${new Date(user.created_at).toLocaleString()}</td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                        <button onclick="window.editUser(${user.id})"
+                                            style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.9); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;">
+                                            ✏️ Edit
+                                        </button>
+                                        <button onclick="window.deleteUser(${user.id})"
+                                            style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.5rem 1rem; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;">
+                                            🗑️ Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                if (window.showMessage) window.showMessage('Error loading users. Make sure FastAPI server is running.', false);
             }
-        } catch (error) {
-            console.error('Error:', error);
-            showMessage(`❌ Error. Make sure FastAPI server is running.`, false);
-        }
-    }
+        };
 
-    function editUser(userId) {
-        const user = usersData.find(u => u.id === userId);
-        if (!user) return;
-
-        document.getElementById('userId').value = user.id;
-        document.getElementById('name').value = user.name;
-        document.getElementById('email').value = user.email;
-        document.getElementById('password').value = ""; // Don't fill password
-
-        // Update UI
-        document.getElementById('formTitle').textContent = "Edit User";
-        document.getElementById('submitBtn').innerHTML = "💾 Update";
-        document.getElementById('cancelBtn').style.display = "block";
-        document.getElementById('passwordHint').style.display = "block";
-
-        // Scroll to form
-        document.getElementById('userForm').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function resetForm() {
-        document.getElementById('userForm').reset();
-        document.getElementById('userId').value = "";
-
-        // Reset UI
-        document.getElementById('formTitle').textContent = "Create New User";
-        document.getElementById('submitBtn').innerHTML = "➕ Create User";
-        document.getElementById('cancelBtn').style.display = "none";
-        document.getElementById('passwordHint').style.display = "none";
-    }
-
-    async function deleteUser(userId) {
-        if (!confirm('Are you sure you want to delete this user?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/${userId}`, {
-                method: 'DELETE'
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                const row = document.getElementById(`user-${userId}`);
-                row.style.opacity = '0';
-                row.style.transform = 'translateX(-20px)';
-                setTimeout(() => {
-                    row.remove();
-                    // Update local data
-                    usersData = usersData.filter(u => u.id !== userId);
-                    loadUsers(currentPage); // Reload current page
-                }, 300);
-                showMessage('✅ User deleted successfully!', true);
-            } else {
-                showMessage(`❌ ${data.detail || 'Error deleting user'}`, false);
+        window.changePage = function (delta) {
+            const newPage = currentPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                window.loadUsers(newPage);
             }
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            showMessage('❌ Error deleting user. Make sure FastAPI server is running.', false);
-        }
-    }
+        };
 
+        // Explicitly attach event listener to form
+        const userForm = document.getElementById('userForm');
+        if (userForm) {
+            userForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                await handleUserSubmit(event);
+            });
+        }
+
+        window.handleUserSubmit = async function (event) {
+            // event.preventDefault() handling now in listener, but keeping here for safety if called directly
+            if (event) event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const userId = formData.get('userId');
+            const isEdit = !!userId;
+
+            const userData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+
+            if (isEdit && !userData.password) {
+                alert("Please enter a password to update user (required by API)");
+                return;
+            }
+
+            const url = isEdit ? `${API_BASE_URL}/${userId}` : API_BASE_URL;
+            const method = isEdit ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.showMessage(`✅ User ${isEdit ? 'updated' : 'created'} successfully!`, true);
+                    window.resetForm();
+                    window.loadUsers(currentPage);
+                } else {
+                    window.showMessage(`❌ ${data.detail || 'Error processing request'}`, false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                window.showMessage(`❌ Error. Make sure FastAPI server is running.`, false);
+            }
+        };
+
+        window.editUser = function (userId) {
+            const user = usersData.find(u => u.id === userId);
+            if (!user) return;
+
+            document.getElementById('userId').value = user.id;
+            document.getElementById('name').value = user.name;
+            document.getElementById('email').value = user.email;
+            document.getElementById('password').value = ""; // Don't fill password
+
+            // Update UI
+            document.getElementById('formTitle').textContent = "Edit User";
+            document.getElementById('submitBtn').innerHTML = "💾 Update";
+            document.getElementById('cancelBtn').style.display = "block";
+            document.getElementById('passwordHint').style.display = "block";
+
+            // Scroll to form
+            document.getElementById('userForm').scrollIntoView({ behavior: 'smooth' });
+        };
+
+        window.resetForm = function () {
+            const form = document.getElementById('userForm');
+            if (form) form.reset();
+
+            const userIdInput = document.getElementById('userId');
+            if (userIdInput) userIdInput.value = "";
+
+            // Reset UI
+            const formTitle = document.getElementById('formTitle');
+            if (formTitle) formTitle.textContent = "Create New User";
+
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) submitBtn.innerHTML = "➕ Create User";
+
+            const cancelBtn = document.getElementById('cancelBtn');
+            if (cancelBtn) cancelBtn.style.display = "none";
+
+            const passwordHint = document.getElementById('passwordHint');
+            if (passwordHint) passwordHint.style.display = "none";
+        };
+
+        window.deleteUser = async function (userId) {
+            if (!confirm('Are you sure you want to delete this user?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const row = document.getElementById(`user-${userId}`);
+                    if (row) {
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(-20px)';
+                        setTimeout(() => {
+                            row.remove();
+                            // Update local data
+                            usersData = usersData.filter(u => u.id !== userId);
+                            window.loadUsers(currentPage); // Reload current page
+                        }, 300);
+                    }
+                    window.showMessage('✅ User deleted successfully!', true);
+                } else {
+                    window.showMessage(`❌ ${data.detail || 'Error deleting user'}`, false);
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                window.showMessage('❌ Error deleting user. Make sure FastAPI server is running.', false);
+            }
+        };
+
+        // Initialize immediately when script runs
+        window.loadUsers(1);
+
+    })();
 </script>
 
 <style>
@@ -368,6 +398,40 @@
 
     .pagination-btn:hover:not(:disabled) {
         background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Toast Notification */
+    .toast-notification {
+        position: fixed;
+        top: 90px;
+        /* Below navbar */
+        right: 20px;
+        background: rgba(15, 23, 42, 0.95);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        z-index: 9999;
+        transform: translateX(150%);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .toast-notification.show {
+        transform: translateX(0);
+    }
+
+    .toast-notification.success {
+        border-left: 4px solid #10b981;
+    }
+
+    .toast-notification.error {
+        border-left: 4px solid #ef4444;
     }
 </style>
 {% endblock %}
