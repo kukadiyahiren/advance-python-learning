@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% block title %}Students - Learning App{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+    <div class="glass-panel" style="padding: 2rem;">
+        <h2 style="margin-bottom: 2rem; font-size: 1.8rem;">🎓 Student Management</h2>
+
+        <!-- Create Student Form -->
+        <div style="background: rgba(255, 255, 255, 0.03); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <h3 id="formTitle" style="margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--primary-color);">Register
+                New Student</h3>
+            <form id="studentForm" method="POST">
+                <input type="hidden" id="studentId" name="studentId">
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-group" style="margin: 0;">
+                        <label for="name"
+                            style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Name</label>
+                        <input type="text" id="name" name="name" placeholder="Enter name" required
+                            style="width: 100%; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;" />
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                        <label for="email"
+                            style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Enter email" required
+                            style="width: 100%; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;" />
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                        <label for="course"
+                            style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Course</label>
+                        <input type="text" id="course" name="course" placeholder="Enter course" required
+                            style="width: 100%; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: white;" />
+                    </div>
+
+                    <div style="display: flex; align-items: flex-end; gap: 1rem;">
+                        <button type="submit" id="submitBtn"
+                            style="flex: 1; padding: 0.75rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            ➕ Add Student
+                        </button>
+                        <button type="button" id="cancelBtn" onclick="resetForm()"
+                            style="display: none; flex: 1; padding: 0.75rem; background: rgba(255, 255, 255, 0.1); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            ❌ Cancel
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Message Display -->
+        <div id="messageBox" style="display: none; padding: 1rem; margin-bottom: 2rem; border-radius: 8px;"></div>
+
+        <!-- Students List -->
+        <div>
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Enrolled Students <span id="studentCount">(0)</span>
+            </h3>
+
+            <div id="studentsTableContainer"
+                style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 1rem;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: rgba(255, 255, 255, 0.05);">
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">
+                                ID</th>
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">
+                                Name</th>
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">
+                                Email</th>
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">
+                                Course</th>
+                            <th
+                                style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">
+                                Joined At</th>
+                            <th
+                                style="padding: 1rem; text-align: center; font-weight: 600; border-bottom: 2px solid rgba(255, 255, 255, 0.1);">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <!-- Students will be loaded here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div id="paginationControls" class="pagination-container">
+                <span id="pageInfo" style="color: var(--text-muted); font-size: 0.9rem; margin-right: 1rem;">Page 1 of
+                    1</span>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="prevBtn" onclick="changePage(-1)" class="pagination-btn">⬅️</button>
+                    <button id="nextBtn" onclick="changePage(1)" class="pagination-btn">➡️</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="emptyState"
+            style="display: none; text-align: center; padding: 3rem; background: rgba(255, 255, 255, 0.03); border-radius: 12px; border: 2px dashed rgba(255, 255, 255, 0.1);">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🎓</div>
+            <p style="color: var(--text-muted); font-size: 1.1rem;">No students found</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Register your first student
+                above!</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const API_BASE_URL = 'http://127.0.0.1:8000/api/students';
+        let studentsData = [];
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
+
+        // Ensure showMessage exists
+        if (!window.showMessage) {
+            window.showMessage = function (message, isSuccess = true) {
+                let toast = document.getElementById('toast-notification');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'toast-notification';
+                    document.body.appendChild(toast);
+                }
+                toast.textContent = message;
+                toast.className = `toast-notification ${isSuccess ? 'success' : 'error'} show`;
+                if (toast.timeoutId) clearTimeout(toast.timeoutId);
+                toast.timeoutId = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 5000);
+            };
+        }
+
+        window.loadStudents = async function (page = 1) {
+            try {
+                const studentCount = document.getElementById('studentCount');
+                if (!studentCount) return;
+
+                const response = await fetch(`${API_BASE_URL}?page=${page}&size=${pageSize}`);
+                const data = await response.json();
+
+                const students = data.items || [];
+                const total = data.total || 0;
+                currentPage = data.page || page;
+                totalPages = data.pages || 1;
+
+                studentsData = students;
+
+                const tbody = document.getElementById('studentsTableBody');
+                const emptyState = document.getElementById('emptyState');
+                const tableContainer = document.getElementById('studentsTableContainer');
+                const paginationControls = document.getElementById('paginationControls');
+
+                if (studentCount) studentCount.textContent = `(${total})`;
+
+                // Update Pagination UI
+                const pageInfo = document.getElementById('pageInfo');
+                const prevBtn = document.getElementById('prevBtn');
+                const nextBtn = document.getElementById('nextBtn');
+
+                if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+                if (prevBtn) {
+                    prevBtn.disabled = currentPage <= 1;
+                    prevBtn.style.opacity = currentPage <= 1 ? '0.5' : '1';
+                }
+                if (nextBtn) {
+                    nextBtn.disabled = currentPage >= totalPages;
+                    nextBtn.style.opacity = currentPage >= totalPages ? '0.5' : '1';
+                }
+
+                if (students.length === 0 && currentPage === 1) {
+                    if (tableContainer) tableContainer.style.display = 'none';
+                    if (paginationControls) paginationControls.style.display = 'none';
+                    if (emptyState) emptyState.style.display = 'block';
+                    if (tbody) tbody.innerHTML = '';
+                } else {
+                    if (tableContainer) tableContainer.style.display = 'block';
+                    if (paginationControls) paginationControls.style.display = 'flex';
+                    if (emptyState) emptyState.style.display = 'none';
+
+                    if (tbody) {
+                        tbody.innerHTML = students.map(student => `
+                            <tr id="student-${student.id}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s;">
+                                <td style="padding: 1rem;">${student.id}</td>
+                                <td style="padding: 1rem; font-weight: 500;">${student.name}</td>
+                                <td style="padding: 1rem; color: var(--text-muted);">${student.email}</td>
+                                <td style="padding: 1rem;">${student.course}</td>
+                                <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">${new Date(student.created_at).toLocaleString()}</td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                        <button onclick="window.editStudent(${student.id})"
+                                            style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.9); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;">
+                                            ✏️ Edit
+                                        </button>
+                                        <button onclick="window.deleteStudent(${student.id})"
+                                            style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.5rem 1rem; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;">
+                                            🗑️ Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+                if (window.showMessage) window.showMessage('Error loading students. Make sure FastAPI server is running.', false);
+            }
+        };
+
+        window.changePage = function (delta) {
+            const newPage = currentPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                window.loadStudents(newPage);
+            }
+        };
+
+        const studentForm = document.getElementById('studentForm');
+        if (studentForm) {
+            studentForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                await handleStudentSubmit(event);
+            });
+        }
+
+        window.handleStudentSubmit = async function (event) {
+            if (event) event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const studentId = formData.get('studentId');
+            const isEdit = !!studentId;
+
+            const studentData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                course: formData.get('course')
+            };
+
+            const url = isEdit ? `${API_BASE_URL}/${studentId}` : API_BASE_URL;
+            const method = isEdit ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(studentData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.showMessage(`✅ Student ${isEdit ? 'updated' : 'registered'} successfully!`, true);
+                    window.resetForm();
+                    window.loadStudents(currentPage);
+                } else {
+                    window.showMessage(`❌ ${data.detail || 'Error processing request'}`, false);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                window.showMessage(`❌ Error. Make sure FastAPI server is running.`, false);
+            }
+        };
+
+        window.editStudent = function (studentId) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) return;
+
+            document.getElementById('studentId').value = student.id;
+            document.getElementById('name').value = student.name;
+            document.getElementById('email').value = student.email;
+            document.getElementById('course').value = student.course;
+
+            document.getElementById('formTitle').textContent = "Edit Student";
+            document.getElementById('submitBtn').innerHTML = "💾 Update";
+            document.getElementById('cancelBtn').style.display = "block";
+
+            document.getElementById('studentForm').scrollIntoView({ behavior: 'smooth' });
+        };
+
+        window.resetForm = function () {
+            const form = document.getElementById('studentForm');
+            if (form) form.reset();
+
+            const studentIdInput = document.getElementById('studentId');
+            if (studentIdInput) studentIdInput.value = "";
+
+            const formTitle = document.getElementById('formTitle');
+            if (formTitle) formTitle.textContent = "Register New Student";
+
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) submitBtn.innerHTML = "➕ Add Student";
+
+            const cancelBtn = document.getElementById('cancelBtn');
+            if (cancelBtn) cancelBtn.style.display = "none";
+        };
+
+        window.deleteStudent = async function (studentId) {
+            if (!confirm('Are you sure you want to delete this student?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/${studentId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const row = document.getElementById(`student-${studentId}`);
+                    if (row) {
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(-20px)';
+                        setTimeout(() => {
+                            row.remove();
+                            studentsData = studentsData.filter(s => s.id !== studentId);
+                            window.loadStudents(currentPage);
+                        }, 300);
+                    }
+                    window.showMessage('✅ Student deleted successfully!', true);
+                } else {
+                    window.showMessage(`❌ ${data.detail || 'Error deleting student'}`, false);
+                }
+            } catch (error) {
+                console.error('Error deleting student:', error);
+                window.showMessage('❌ Error deleting student. Make sure FastAPI server is running.', false);
+            }
+        };
+
+        window.loadStudents(1);
+
+    })();
+</script>
+
+<style>
+    tr:hover {
+        background: rgba(255, 255, 255, 0.03) !important;
+    }
+
+    button:hover,
+    a:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 1rem 0;
+    }
+
+    .pagination-btn {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Toast Notification reuse from base or add if missing */
+    .toast-notification {
+        position: fixed;
+        top: 90px;
+        right: 20px;
+        background: rgba(15, 23, 42, 0.95);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        z-index: 9999;
+        transform: translateX(150%);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .toast-notification.show {
+        transform: translateX(0);
+    }
+
+    .toast-notification.success {
+        border-left: 4px solid #10b981;
+    }
+
+    .toast-notification.error {
+        border-left: 4px solid #ef4444;
+    }
+</style>
+{% endblock %}

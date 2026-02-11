@@ -10,7 +10,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_settings')
 django.setup()
 
-from models import Gallery, Category, User, Role
+from models import Gallery, Category, User, Role, Student
 from django.core.paginator import Paginator, EmptyPage
 
 # ... (existing imports)
@@ -293,3 +293,101 @@ def get_categories():
     categories = Category.objects.all().values('id', 'name')
     return list(categories)
 
+
+# ===== STUDENT FUNCTIONS =====
+
+def create_student(name, email, course, created_at=None, updated_at=None):
+    """Create a new student using Django ORM"""
+    if created_at is None:
+        created_at = timezone.now()
+    if updated_at is None:
+        updated_at = timezone.now()
+    
+    try:
+        student = Student.objects.create(
+            name=name,
+            email=email,
+            course=course,
+            created_at=created_at,
+            updated_at=updated_at
+        )
+        return student.id
+    except IntegrityError:
+        return None
+
+
+def get_all_students(page=1, page_size=10):
+    """Get all students using Django ORM and Paginator"""
+    queryset = Student.objects.all().order_by('-created_at')
+    paginator = Paginator(queryset, page_size)
+    
+    try:
+        students_page = paginator.page(page)
+        students = students_page.object_list
+    except EmptyPage:
+        students = []
+    except Exception:
+        students = []
+
+    result = []
+    for student in students:
+        result.append({
+            'id': student.id,
+            'name': student.name,
+            'email': student.email,
+            'course': student.course,
+            'created_at': student.created_at
+        })
+    return {'students': result, 'total': paginator.count}
+
+
+def get_student_by_id(student_id):
+    """Get student by ID using Django ORM"""
+    try:
+        student = Student.objects.get(id=student_id)
+        return {
+            'id': student.id,
+            'name': student.name,
+            'email': student.email,
+            'course': student.course,
+            'created_at': student.created_at
+        }
+    except Student.DoesNotExist:
+        return None
+
+
+def update_student(student_id, name, email, course, updated_at=None):
+    """Update student information using Django ORM"""
+    if updated_at is None:
+        updated_at = timezone.now()
+    
+    try:
+        updated_count = Student.objects.filter(id=student_id).update(
+            name=name,
+            email=email,
+            course=course,
+            updated_at=updated_at
+        )
+        return updated_count > 0
+    except IntegrityError:
+        return False
+
+
+def delete_student(student_id):
+    """Delete a student by ID using Django ORM"""
+    try:
+        student = Student.objects.get(id=student_id)
+        student.delete()
+        return True
+    except Student.DoesNotExist:
+        return False
+
+
+def get_student_count():
+    """Get total count of students using Django ORM"""
+    return Student.objects.count()
+
+
+def get_user_count():
+    """Get total count of users using Django ORM"""
+    return User.objects.count()

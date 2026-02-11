@@ -10,25 +10,7 @@
 
 <div class="dashboard-grid">
     <!-- Stock Widgets -->
-    <div id="stock-container" style="display: contents;">
-        <!-- Progress Bar -->
-        <div class="progress-container">
-            <div id="refresh-bar" class="progress-bar"></div>
-        </div>
 
-        {% for stock in stocks %}
-        <div class="glass-panel stat-card">
-            <div class="stat-title">{{ stock.name }}</div>
-            <div class="stat-value" style="font-size: 1.5rem;">{{ stock.price }}</div>
-            <div style="font-size: 0.9rem; margin-top: 0.5rem; color: {{ '#10b981' if stock.is_up else '#ef4444' }};">
-                {{ '▲' if stock.is_up else '▼' }} {{ stock.change }} ({{ stock.pct }})
-            </div>
-            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem; text-align: right;">
-                {{ stock.last_updated }}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
 
     <!-- Stats Cards -->
     <div class="glass-panel stat-card">
@@ -52,6 +34,18 @@
         <div class="stat-title">Gallery Items</div>
         <div class="stat-value">{{ galleryCount }}</div>
         <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Total Uploaded Images</div>
+    </div>
+
+    <div class="glass-panel stat-card">
+        <div class="stat-title">Total Students</div>
+        <div class="stat-value">{{ studentCount }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Enrolled Students</div>
+    </div>
+
+    <div class="glass-panel stat-card">
+        <div class="stat-title">Total Users</div>
+        <div class="stat-value">{{ userCount }}</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">System Users</div>
     </div>
 
     <!-- Skills Card -->

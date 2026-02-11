@@ -85,3 +85,22 @@ class User(models.Model):
     def __str__(self):
         return self.name
 
+
+class Student(models.Model):
+    """Student model for student management"""
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=255, unique=True)
+    course = models.CharField(max_length=100)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
+
+    class Meta:
+        app_label = 'myapp'
+        db_table = 'students'
+        managed = False  # Don't let Django manage this table
+        ordering = ['-id']
+
+    def __str__(self):
+        return self.name
+

@@ -5,7 +5,9 @@ from typing import List, Optional
 from datetime import datetime
 from db import (create_user, get_all_users, get_user_by_id, 
                 update_user, delete_user, create_role, get_all_roles,
-                get_role_by_id, update_role, delete_role)
+                get_role_by_id, update_role, delete_role,
+                create_student, get_all_students, get_student_by_id,
+                update_student, delete_student)
 
 app = FastAPI(title="User Management API", version="1.0.0")
 
@@ -62,6 +64,34 @@ class UserResponse(BaseModel):
 
 class UserDetailResponse(UserResponse):
     password: str
+
+# Student Models
+class StudentCreate(BaseModel):
+    name: str
+    email: EmailStr
+    course: str
+
+class StudentUpdate(BaseModel):
+    name: str
+    email: EmailStr
+    course: str
+
+class StudentResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    course: str
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class PaginatedStudentResponse(BaseModel):
+    items: List[StudentResponse]
+    total: int
+    page: int
+    size: int
+    pages: int
 
 # API Endpoints
 
@@ -242,6 +272,63 @@ def delete_role_endpoint(role_id: int):
         return {"success": True, "message": "Role deleted successfully"}
     else:
         raise HTTPException(status_code=404, detail="Role not found")
+
+# ===== STUDENT MANAGEMENT ENDPOINTS =====
+
+@app.post("/api/students", response_model=dict, status_code=201)
+def create_student_endpoint(student: StudentCreate):
+    """Create a new student"""
+    created_at = datetime.now()
+    updated_at = datetime.now()
+    student_id = create_student(student.name, student.email, student.course, created_at, updated_at)
+    if student_id:
+        return {"success": True, "id": student_id, "message": "Student created successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Email already exists")
+
+@app.get("/api/students", response_model=PaginatedStudentResponse)
+def get_students_endpoint(page: int = 1, size: int = 10):
+    """Get all students with pagination"""
+    data = get_all_students(page=page, page_size=size)
+    
+    total = data['total']
+    pages = (total + size - 1) // size
+    
+    return {
+        "items": data['students'],
+        "total": total,
+        "page": page,
+        "size": size,
+        "pages": pages
+    }
+
+@app.get("/api/students/{student_id}", response_model=StudentResponse)
+def get_student_endpoint(student_id: int):
+    """Get student by ID"""
+    student = get_student_by_id(student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return student
+
+@app.put("/api/students/{student_id}", response_model=dict)
+def update_student_endpoint(student_id: int, student: StudentUpdate):
+    """Update student"""
+    updated_at = datetime.now()
+    success = update_student(student_id, student.name, student.email, student.course, updated_at)
+    if success:
+        return {"success": True, "message": "Student updated successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Email already exists or student not found")
+
+@app.delete("/api/students/{student_id}", response_model=dict)
+def delete_student_endpoint(student_id: int):
+    """Delete student"""
+    success = delete_student(student_id)
+    if success:
+        return {"success": True, "message": "Student deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Student not found")
+
 
 if __name__ == "__main__":
     import uvicorn

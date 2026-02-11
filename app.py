@@ -11,7 +11,7 @@ from deepface import DeepFace
 from functools import wraps
 from db import (init_db, save_gallery_item, get_gallery_items, get_gallery_count, 
                 delete_gallery_item, create_user, get_all_users, get_user_by_id, 
-                update_user, delete_user, get_categories)
+                update_user, delete_user, get_categories, get_student_count, get_user_count)
 
 
 app = Flask(__name__)
@@ -57,6 +57,12 @@ def login():
             message = "❌ Invalid Credentials"
 
     return render_template('login.html', message=message)
+
+
+@app.route('/students')
+@login_required
+def students():
+    return render_template('students.html')
 
 
 @app.route('/users', methods=['GET', 'POST'])
@@ -211,6 +217,8 @@ def dashboard():
     print(rev)
     
     gallery_count = get_gallery_count()
+    student_count = get_student_count()
+    user_count = get_user_count()
 
     
     stocks = fetch_stock_data()
@@ -224,6 +232,8 @@ def dashboard():
         studyHours=study_hours,
         userData=user,
         galleryCount=gallery_count,
+        studentCount=student_count,
+        userCount=user_count,
         stocks=stocks
     )
 
