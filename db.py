@@ -17,7 +17,7 @@ from django.core.paginator import Paginator, EmptyPage
 
 def get_all_users(page=1, page_size=10):
     """Get all users with role information using Django ORM and Paginator"""
-    queryset = User.objects.select_related('role').all().order_by('-created_at')
+    queryset = User.objects.select_related('role').all().order_by('id').asc()
     paginator = Paginator(queryset, page_size)
     
     try:
@@ -153,7 +153,7 @@ def create_user(name, email, password, created_at=None, updated_at=None, role_id
 
 def get_all_users(page=1, page_size=10):
     """Get all users with role information using Django ORM and Paginator"""
-    queryset = User.objects.select_related('role').all().order_by('-created_at')
+    queryset = User.objects.select_related('role').all().order_by('-id')
     paginator = Paginator(queryset, page_size)
     
     try:

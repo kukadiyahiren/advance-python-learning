@@ -149,7 +149,11 @@
                 // If elements are missing, the page might have changed
                 if (!userCount) return;
 
-                const response = await fetch(`${API_BASE_URL}?page=${page}&size=${pageSize}`);
+                const response = await fetch(`${API_BASE_URL}?page=${page}&size=${pageSize}`, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
                 const data = await response.json();
 
                 const users = data.items || [];
@@ -329,7 +333,10 @@
 
             try {
                 const response = await fetch(`${API_BASE_URL}/${userId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
 
                 const data = await response.json();

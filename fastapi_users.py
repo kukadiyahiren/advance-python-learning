@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
@@ -10,6 +11,9 @@ from db import (create_user, get_all_users, get_user_by_id,
                 update_student, delete_student)
 
 app = FastAPI(title="User Management API", version="1.0.0")
+
+# Security Configuration removed
+
 
 # Enable CORS to allow Flask frontend to call FastAPI
 app.add_middleware(
@@ -188,6 +192,7 @@ class PaginatedUserResponse(BaseModel):
     pages: int
 
 @app.get("/api/users", response_model=PaginatedUserResponse)
+@app.get("/api/users", response_model=PaginatedUserResponse)
 def get_users_endpoint(page: int = 1, size: int = 10):
     """Get all users with pagination"""
     data = get_all_users(page=page, page_size=size)
@@ -204,6 +209,7 @@ def get_users_endpoint(page: int = 1, size: int = 10):
     }
 
 @app.get("/api/users/{user_id}", response_model=UserDetailResponse)
+@app.get("/api/users/{user_id}", response_model=UserDetailResponse)
 def get_user_endpoint(user_id: int):
     """Get user by ID"""
     user = get_user_by_id(user_id)
@@ -211,6 +217,7 @@ def get_user_endpoint(user_id: int):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+@app.put("/api/users/{user_id}", response_model=dict)
 @app.put("/api/users/{user_id}", response_model=dict)
 def update_user_endpoint(user_id: int, user: UserUpdate):
     """Update user"""
@@ -221,6 +228,7 @@ def update_user_endpoint(user_id: int, user: UserUpdate):
     else:
         raise HTTPException(status_code=400, detail="Name or Email already exists or user not found")
 
+@app.delete("/api/users/{user_id}", response_model=dict)
 @app.delete("/api/users/{user_id}", response_model=dict)
 def delete_user_endpoint(user_id: int):
     """Delete user"""
@@ -276,6 +284,7 @@ def delete_role_endpoint(role_id: int):
 # ===== STUDENT MANAGEMENT ENDPOINTS =====
 
 @app.post("/api/students", response_model=dict, status_code=201)
+@app.post("/api/students", response_model=dict, status_code=201)
 def create_student_endpoint(student: StudentCreate):
     """Create a new student"""
     created_at = datetime.now()
@@ -286,6 +295,7 @@ def create_student_endpoint(student: StudentCreate):
     else:
         raise HTTPException(status_code=400, detail="Email already exists")
 
+@app.get("/api/students", response_model=PaginatedStudentResponse)
 @app.get("/api/students", response_model=PaginatedStudentResponse)
 def get_students_endpoint(page: int = 1, size: int = 10):
     """Get all students with pagination"""
@@ -303,6 +313,7 @@ def get_students_endpoint(page: int = 1, size: int = 10):
     }
 
 @app.get("/api/students/{student_id}", response_model=StudentResponse)
+@app.get("/api/students/{student_id}", response_model=StudentResponse)
 def get_student_endpoint(student_id: int):
     """Get student by ID"""
     student = get_student_by_id(student_id)
@@ -310,6 +321,7 @@ def get_student_endpoint(student_id: int):
         raise HTTPException(status_code=404, detail="Student not found")
     return student
 
+@app.put("/api/students/{student_id}", response_model=dict)
 @app.put("/api/students/{student_id}", response_model=dict)
 def update_student_endpoint(student_id: int, student: StudentUpdate):
     """Update student"""
@@ -320,6 +332,7 @@ def update_student_endpoint(student_id: int, student: StudentUpdate):
     else:
         raise HTTPException(status_code=400, detail="Email already exists or student not found")
 
+@app.delete("/api/students/{student_id}", response_model=dict)
 @app.delete("/api/students/{student_id}", response_model=dict)
 def delete_student_endpoint(student_id: int):
     """Delete student"""

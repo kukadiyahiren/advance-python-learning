@@ -29,6 +29,8 @@ if not os.path.exists(UPLOAD_FOLDER):
 USERNAME = "admin"
 PASSWORD = "123456"
 
+
+
 # Login required decorator
 def login_required(f):
     @wraps(f)
@@ -37,6 +39,8 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+
 
 # Initialize DB on start
 with app.app_context():

@@ -141,7 +141,11 @@
                 const studentCount = document.getElementById('studentCount');
                 if (!studentCount) return;
 
-                const response = await fetch(`${API_BASE_URL}?page=${page}&size=${pageSize}`);
+                const response = await fetch(`${API_BASE_URL}?page=${page}&size=${pageSize}`, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
                 const data = await response.json();
 
                 const students = data.items || [];
@@ -247,7 +251,9 @@
             try {
                 const response = await fetch(url, {
                     method: method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify(studentData)
                 });
 
@@ -306,7 +312,10 @@
 
             try {
                 const response = await fetch(`${API_BASE_URL}/${studentId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
 
                 const data = await response.json();
