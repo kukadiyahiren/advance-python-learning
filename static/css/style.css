@@ -536,15 +536,19 @@ li {
 
 .modal-content {
     position: relative;
-    width: 90%;
-    max-width: 1000px;
-    height: 80vh;
+    width: calc(100% - 40px);
+    max-width: 1200px;
+    min-height: 400px;
+    max-height: calc(100vh - 40px);
     background: #1e293b;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     transform: translateY(20px);
     transition: transform 0.3s ease;
+    margin: auto;
+    /* Ensure centering in flex parent */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .modal.active .modal-content {
@@ -558,6 +562,7 @@ li {
     justify-content: space-between;
     align-items: center;
     background: rgba(15, 23, 42, 0.5);
+    flex-shrink: 0;
 }
 
 .close-modal {
@@ -578,6 +583,7 @@ li {
     flex: 1;
     display: flex;
     overflow: hidden;
+    min-height: 0;
 }
 
 .modal-image-col {
@@ -587,6 +593,7 @@ li {
     align-items: center;
     justify-content: center;
     padding: 1rem;
+    overflow: hidden;
 }
 
 .modal-image-col img {
@@ -601,6 +608,7 @@ li {
     flex-direction: column;
     border-left: 1px solid var(--border-color);
     background: #f8fafc;
+    overflow: hidden;
     /* Light bg for text readability like document viewer */
 }
 
@@ -612,11 +620,13 @@ li {
     }
 
     .modal-image-col {
-        min-height: 300px;
+        min-height: 250px;
+        max-height: 40vh;
     }
 
     .modal-content {
-        height: 90vh;
+        width: 95%;
+        max-height: 95vh;
     }
 }
 

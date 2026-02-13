@@ -10,6 +10,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_settings')
 django.setup()
 
+from datetime import datetime
 from models import Gallery, Category, User, Role, Student
 from django.core.paginator import Paginator, EmptyPage
 from django.utils import timezone

@@ -61,62 +61,30 @@
     {% endfor %}
 </div>
 
-<!-- Modal -->
-<div id="details-modal" class="modal">
-    <div class="modal-backdrop"></div>
-    <div class="glass-panel modal-content">
-        <div class="modal-header">
-            <h3>Image Details</h3>
-            <button class="close-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="modal-image-col">
-                <img id="modal-image" src="" alt="Full view">
-            </div>
-            <div class="modal-text-col">
-                <div class="document-viewer" style="margin-top: 0; height: 100%;">
-                    <div class="document-header">
-                        <div class="document-title"><span>📄</span> Extracted Text</div>
-                        <button class="copy-btn" onclick="copyModalText()"><span>📋</span> Copy</button>
-                    </div>
-                    <div class="document-body">
-                        <textarea id="modal-text" class="document-content" readonly></textarea>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Variant Selection Modal -->
-<div id="variant-modal" class="modal">
-    <div class="modal-backdrop"></div>
-    <div class="glass-panel modal-content" style="max-width: 900px;">
-        <div class="modal-header">
-            <h3>Select a Style</h3>
-            <div style="font-size: 0.9rem; color: var(--text-muted); margin-left: auto; margin-right: 1rem;"
-                id="gender-info"></div>
-            <button class="close-variant-modal" onclick="hideVariantModal()">&times;</button>
-        </div>
-        <div class="modal-body" style="display: block; overflow-y: auto;">
-            <p>We analyzed your face. Select a style to save to the gallery:</p>
-            <div class="variant-grid" id="variant-grid">
-                <!-- Variants injected here -->
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('gallery-upload-input');
     const categorySelect = document.getElementById('category-select');
     const uploadStatus = document.getElementById('upload-status');
     const galleryGrid = document.getElementById('gallery-grid');
-    const modal = document.getElementById('details-modal');
-    const variantModal = document.getElementById('variant-modal');
-    const closeModal = document.querySelector('.close-modal');
-    const backdrop = document.querySelector('.modal-backdrop');
+    let modal, variantModal, closeModal, backdrop;
+
+    function initModals() {
+        if (!modal) modal = document.getElementById('details-modal');
+        if (!variantModal) variantModal = document.getElementById('variant-modal');
+        if (!closeModal) closeModal = document.querySelector('.close-modal');
+        if (!backdrop) backdrop = document.querySelector('.modal-backdrop');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initModals();
+        if (closeModal) closeModal.addEventListener('click', hideModal);
+        if (backdrop) backdrop.addEventListener('click', hideModal);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal && modal.classList.contains('active')) hideModal();
+        });
+    });
 
     // Drag & Drop Handlers
     dropZone.addEventListener('click', (e) => {
@@ -381,6 +349,8 @@
 
     // Modal Functions
     window.showDetails = function (item) {
+        initModals();
+        if (!modal) return;
         document.getElementById('modal-image').src = `/uploads/${item.filename}`;
         document.getElementById('modal-text').value = item.text;
         modal.classList.add('active');
@@ -392,11 +362,7 @@
         document.body.style.overflow = '';
     }
 
-    closeModal.addEventListener('click', hideModal);
-    backdrop.addEventListener('click', hideModal);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) hideModal();
-    });
+
 
     window.copyModalText = function () {
         const copyText = document.getElementById("modal-text");
@@ -409,4 +375,52 @@
         setTimeout(() => btn.innerHTML = originalHtml, 2000);
     }
 </script>
+{% endblock %}
+
+{% block extra_body %}
+<!-- Modal -->
+<div id="details-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="glass-panel modal-content">
+        <div class="modal-header">
+            <h3>Image Details</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-image-col">
+                <img id="modal-image" src="" alt="Full view">
+            </div>
+            <div class="modal-text-col">
+                <div class="document-viewer" style="margin-top: 0; height: 100%;">
+                    <div class="document-header">
+                        <div class="document-title"><span>📄</span> Extracted Text</div>
+                        <button class="copy-btn" onclick="copyModalText()"><span>📋</span> Copy</button>
+                    </div>
+                    <div class="document-body">
+                        <textarea id="modal-text" class="document-content" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Variant Selection Modal -->
+<div id="variant-modal" class="modal">
+    <div class="modal-backdrop"></div>
+    <div class="glass-panel modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+            <h3>Select a Style</h3>
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-left: auto; margin-right: 1rem;"
+                id="gender-info"></div>
+            <button class="close-variant-modal" onclick="hideVariantModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="display: block; overflow-y: auto;">
+            <p>We analyzed your face. Select a style to save to the gallery:</p>
+            <div class="variant-grid" id="variant-grid">
+                <!-- Variants injected here -->
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
