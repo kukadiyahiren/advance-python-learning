@@ -61,6 +61,10 @@ with app.app_context():
     init_db()
     print("Database Initialized.")
 
+@app.route('/robots.txt')
+def robots():
+    return send_from_directory('static', 'robots.txt')
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     message = ""
