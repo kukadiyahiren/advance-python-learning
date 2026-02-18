@@ -19,7 +19,7 @@ Full-stack AI web application combining Flask, FastAPI, DeepFace, OCR, and real-
 
 ![Stars](https://img.shields.io/github/stars/kukadiyahiren/advance-python-learning?style=social)
 ![Forks](https://img.shields.io/github/forks/kukadiyahiren/advance-python-learning?style=social)
-![Views](https://komarev.com/ghpvc/?kukadiyahiren=kukadiyahiren&repo=advance-python-learning&color=blue)
+![Views](https://komarev.com/ghpvc/?username=kukadiyahiren&repo=advance-python-learning&color=blue)
 ![Downloads](https://img.shields.io/github/downloads/kukadiyahiren/advance-python-learning/total)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![Flask](https://img.shields.io/badge/Flask-Web_App-black)
