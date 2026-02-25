@@ -1,4 +1,11 @@
 <p align="center">
+  <a href="https://in.linkedin.com/in/hirenkukadiya">
+    <img src="https://img.shields.io/badge/LinkedIn-Hiren%20Kukadiya-0A66C2?logo=linkedin&logoColor=white&style=for-the-badge" />
+  </a>
+</p>
+
+
+<p align="center">
   <img src="static/images/advanced_python_ai_web_suite_preview_small.jpg" alt="Advanced Python AI Web Suite" width="60%" height="auto">
 </p>
 
